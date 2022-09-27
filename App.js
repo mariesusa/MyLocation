@@ -1,57 +1,62 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState, useEffect } from 'react';
-import { Alert, Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Button, Keyboard, StyleSheet, TextInput, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 
 export default function App() {
 
+const initial = {
+  latitude: 60.200692,
+  longitude: 24.934302,
+  latitudeDelta: 0.0322,
+  longitudeDelta: 0.0221
+};
+
 const [address, setAddress] = useState('');
-const [geolocation, setGeolocation] = useState('');
-const [location, setLocation] = useState(null);
-const [coordinates, setCoordinates] = useState(null);
+const [geolocation, setGeolocation] = useState(initial);
 
 useEffect(() => {
-  (async () => {
-  let { status } = await Location.requestForegroundPermissionsAsync();
-  if (status !== 'granted') {
-    Alert.alert('No permission to get location')
-    return;
+  const findLocation = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+    Alert.alert('No permission to get location');
+  } else {
+    try {
+      let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      setGeolocation({ ...geolocation, latitude: location.coords.latitude, longitude: location.coords.longitude });
+    } catch (error) {
+      Alert.alert('Error', error);
+    }
   }
+}
+findLocation();
+}, []);
 
-  let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-  setLocation({ latitude: `${coords.latitude}`, longitude: `${coords.longitude}`, latitudeDelta: 0.0322, longitudeDelta: 0.0221 });
-  console.log('Location', location)
-  setCoordinates({ latitude: `${coords.latitude}`, longitude: `${coords.longitude}`, title: 'Current location' });
-})();
- }, []);
+const findAddress = async (address) => {
+  try {
+    const response = await fetch(`http://www.mapquestapi.com/geocoding/v1/address?key=r0vb5J2B0gkhcNQ7YyQfNAk8fKMqFBsa&location=${address}`);
+    const data = await response.json();
 
-//change geolocation to location and coordinates when the original location works
-const findAddress = () => {
-  fetch(`http://www.mapquestapi.com/geocoding/v1/address?key=r0vb5J2B0gkhcNQ7YyQfNAk8fKMqFBsa&location=${address}`)
-  .then(response => response.json())
-  .then(responseJson => responseJson.results[0].locations[0].latLng)
-  console.log(responseJson)
-  setGeolocation({ latitude: `${responseJson.lat}`, longitude: `${responseJson.lng}` })
-  console.log(geolocation)
-
-  .catch(error => {
+    const { lat, lng } = data.results[0].location[0].latLng;
+    setGeolocation({ ...geolocation, latitude: lat, longitude: lng })
+  } catch(error) {
     Alert.alert('Error', error);
-  });
+  }
+  Keyboard.dismiss();
 }
 
   return (
 
-    <View style={styles.container}>
+    <View style={ styles.container }>
 
       <MapView
         style={ styles.map }
-        region={ location }
+        region={ geolocation }
       >
 
       <Marker
-        followUserLocation={ true }
-        coordinate={ coordinates }
+        coordinate={ geolocation }
       />
       </MapView>
     
@@ -66,7 +71,7 @@ const findAddress = () => {
 
       <View style={ styles.button }>
         <Button title='SHOW'
-          onPress={ findAddress } />
+          onPress={ () => findAddress(address) } />
       </View>
     
     </View>
