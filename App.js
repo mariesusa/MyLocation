@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 200
+    marginBottom: 20
   },
   input : {
     width: 200,
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
-    width: '80%',
+    width: '95%',
     height: '95%'
   }
 });
